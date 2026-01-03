@@ -25,8 +25,9 @@ function latLngToVector3(lat: number, lng: number, radius: number): THREE.Vector
 }
 
 export function BeaconMarker({ item, globeRadius, isSelected, currentMode, onClick }: BeaconMarkerProps) {
-  const lineRef = useRef<THREE.Mesh>(null);
-  const tipRef = useRef<THREE.Mesh>(null);
+  const groupRef = useRef<THREE.Group>(null);
+  const pinRef = useRef<THREE.Mesh>(null);
+  const ringRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
   // Base position on globe surface
@@ -46,30 +47,33 @@ export function BeaconMarker({ item, globeRadius, isSelected, currentMode, onCli
 
   // Position at surface
   const surfacePosition = useMemo(() => {
-    return basePosition.clone().add(normal.clone().multiplyScalar(0.003));
+    return basePosition.clone().add(normal.clone().multiplyScalar(0.002));
   }, [basePosition, normal]);
 
   // Color
   const color = currentMode === 'instruments' ? '#00a8ff' : '#818cf8';
   const colorObj = useMemo(() => new THREE.Color(color), [color]);
 
-  // Line height based on state
-  const lineHeight = isSelected ? 0.18 : hovered ? 0.14 : 0.12;
-  const tipSize = isSelected ? 0.018 : hovered ? 0.015 : 0.012;
+  // Sizes based on state
+  const pinHeight = isSelected ? 0.10 : hovered ? 0.08 : 0.06;
+  const pinRadius = isSelected ? 0.014 : hovered ? 0.012 : 0.010;
 
-  // Subtle animation
+  // Animation
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     
-    if (lineRef.current) {
-      const mat = lineRef.current.material as THREE.ShaderMaterial;
-      mat.uniforms.opacity.value = isSelected ? 0.85 : hovered ? 0.65 : 0.45;
+    // Gentle floating animation for pin
+    if (pinRef.current) {
+      const float = Math.sin(t * 1.5 + item.coordinates.lat * 0.1) * 0.003;
+      pinRef.current.position.y = pinHeight + float;
     }
 
-    if (tipRef.current) {
-      // Gentle pulse
-      const pulse = 1 + Math.sin(t * 2) * 0.08;
-      tipRef.current.scale.setScalar(isSelected ? pulse : 1);
+    // Pulse ring when selected
+    if (ringRef.current && isSelected) {
+      const scale = 1 + (t % 1.5) * 0.8;
+      const opacity = 1 - (t % 1.5) / 1.5;
+      ringRef.current.scale.setScalar(scale);
+      (ringRef.current.material as THREE.MeshBasicMaterial).opacity = opacity * 0.5;
     }
   });
 
@@ -89,88 +93,76 @@ export function BeaconMarker({ item, globeRadius, isSelected, currentMode, onCli
     document.body.style.cursor = 'auto';
   };
 
-  // Ultra-clean gradient line shader
-  const lineMaterial = useMemo(() => {
-    return new THREE.ShaderMaterial({
-      uniforms: {
-        color: { value: colorObj },
-        opacity: { value: 0.45 },
-      },
-      vertexShader: `
-        varying vec2 vUv;
-        void main() {
-          vUv = uv;
-          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-        }
-      `,
-      fragmentShader: `
-        uniform vec3 color;
-        uniform float opacity;
-        varying vec2 vUv;
-        
-        void main() {
-          // Clean vertical gradient - stronger at bottom
-          float gradient = pow(1.0 - vUv.y, 2.0);
-          // Thin center line
-          float center = 1.0 - pow(abs(vUv.x - 0.5) * 2.0, 0.5);
-          float alpha = gradient * center * opacity;
-          gl_FragColor = vec4(color, alpha);
-        }
-      `,
-      transparent: true,
-      depthWrite: false,
-      side: THREE.DoubleSide,
-      blending: THREE.AdditiveBlending,
-    });
-  }, [colorObj]);
-
   return (
-    <group position={surfacePosition} rotation={rotation}>
-      {/* Thin vertical line - plane 1 */}
-      <mesh ref={lineRef} position={[0, lineHeight / 2, 0]}>
-        <planeGeometry args={[0.006, lineHeight]} />
-        <primitive object={lineMaterial} attach="material" />
+    <group ref={groupRef} position={surfacePosition} rotation={rotation}>
+      {/* Base anchor point - tiny dot */}
+      <mesh>
+        <circleGeometry args={[0.008, 16]} />
+        <meshBasicMaterial 
+          color={colorObj} 
+          transparent 
+          opacity={isSelected ? 0.9 : hovered ? 0.7 : 0.5}
+          side={THREE.DoubleSide}
+        />
       </mesh>
 
-      {/* Thin vertical line - plane 2 (perpendicular) */}
-      <mesh position={[0, lineHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[0.006, lineHeight]} />
-        <primitive object={lineMaterial.clone()} attach="material" />
+      {/* Thin stem line */}
+      <mesh position={[0, pinHeight / 2, 0]}>
+        <cylinderGeometry args={[0.002, 0.002, pinHeight, 8]} />
+        <meshBasicMaterial 
+          color={colorObj} 
+          transparent 
+          opacity={isSelected ? 0.8 : hovered ? 0.6 : 0.4}
+        />
       </mesh>
 
-      {/* Top tip point */}
+      {/* Pin head - elegant sphere */}
       <mesh
-        ref={tipRef}
-        position={[0, lineHeight, 0]}
+        ref={pinRef}
+        position={[0, pinHeight, 0]}
         onClick={handleClick}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
       >
-        <sphereGeometry args={[tipSize, 16, 16]} />
+        <sphereGeometry args={[pinRadius, 24, 24]} />
         <meshBasicMaterial 
-          color={isSelected ? '#ffffff' : colorObj} 
+          color={isSelected ? '#ffffff' : colorObj}
         />
       </mesh>
 
-      {/* Tip glow */}
-      <mesh position={[0, lineHeight, 0]}>
-        <sphereGeometry args={[tipSize * 1.8, 12, 12]} />
-        <meshBasicMaterial
-          color={colorObj}
-          transparent
-          opacity={isSelected ? 0.5 : hovered ? 0.35 : 0.2}
+      {/* Glow around pin head */}
+      <mesh position={[0, pinHeight, 0]}>
+        <sphereGeometry args={[pinRadius * 2.2, 16, 16]} />
+        <meshBasicMaterial 
+          color={colorObj} 
+          transparent 
+          opacity={isSelected ? 0.4 : hovered ? 0.25 : 0.15}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
       </mesh>
 
-      {/* Invisible hit area */}
+      {/* Selection ring pulse */}
+      {isSelected && (
+        <mesh ref={ringRef} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.015, 0.018, 32]} />
+          <meshBasicMaterial 
+            color={colorObj} 
+            transparent 
+            opacity={0.5}
+            side={THREE.DoubleSide}
+            depthWrite={false}
+          />
+        </mesh>
+      )}
+
+      {/* Invisible larger hit area */}
       <mesh
         onClick={handleClick}
         onPointerEnter={handlePointerEnter}
         onPointerLeave={handlePointerLeave}
       >
-        <cylinderGeometry args={[0.03, 0.03, lineHeight + 0.04, 6]} />
+        <cylinderGeometry args={[0.025, 0.025, pinHeight + 0.03, 8]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
     </group>

@@ -60,53 +60,88 @@ export function DetailsPanel() {
   const accentColor = '#00a8ff';
 
   return (
-    <div className="fixed left-5 bottom-5 z-10">
-      {/* Minimal compact card */}
-      <div className="bg-black/60 backdrop-blur-md border border-white/10 rounded-2xl p-4 w-[280px]">
-        {/* Location row */}
-        <div className="flex items-center gap-2 mb-3">
+    <div className="fixed left-8 bottom-8 z-10">
+      <div 
+        className="w-[320px] rounded-2xl overflow-hidden"
+        style={{
+          background: 'rgba(10, 10, 14, 0.9)',
+          backdropFilter: 'blur(32px)',
+          border: '1px solid rgba(255, 255, 255, 0.06)',
+          boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.4)',
+        }}
+      >
+        {/* Accent bar */}
+        <div 
+          className="h-[2px] w-full"
+          style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}30, transparent)` }}
+        />
+        
+        {/* Content */}
+        <div className="p-6">
+          
+          {/* Region tag */}
           <span 
-            className="w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: accentColor }}
-          />
-          <span className="text-xs text-muted uppercase tracking-wider">
+            className="inline-block px-2.5 py-1 rounded-md text-[10px] uppercase tracking-[0.12em] font-medium mb-5"
+            style={{ 
+              backgroundColor: `${accentColor}12`,
+              color: `${accentColor}cc`,
+            }}
+          >
             {selectedItem.region}
           </span>
-        </div>
-
-        {/* Main content */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-medium text-white truncate">
-              {selectedItem.name}
-            </h2>
-            <p className="text-sm text-white/50">
-              {selectedItem.country}
+          
+          {/* Name */}
+          <h2 className="text-[22px] font-normal text-white mb-1.5 leading-snug">
+            {selectedItem.name}
+          </h2>
+          
+          {/* Country */}
+          <p className="text-sm text-white/40 mb-5">
+            {selectedItem.country}
+          </p>
+          
+          {/* Description */}
+          {selectedItem.description && (
+            <p className="text-[13px] text-white/30 leading-relaxed mb-6">
+              {selectedItem.description}
             </p>
-            {currentSound && (
-              <p className="text-[10px] text-white/30 mt-1 truncate">
-                by {currentSound.username}
-              </p>
-            )}
-          </div>
+          )}
+          
+          {/* Divider */}
+          <div className="h-px w-full bg-white/5 mb-5" />
           
           {/* Play button */}
           <button
             onClick={handlePlayPause}
             disabled={isLoading}
-            className="w-11 h-11 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 shrink-0"
-            style={{ 
-              backgroundColor: accentColor,
-              boxShadow: isPlaying ? `0 0 20px ${accentColor}60` : 'none'
-            }}
+            className="flex items-center gap-4 group w-full"
           >
-            {isLoading ? (
-              <Loader2 size={18} className="text-white animate-spin" />
-            ) : isPlaying ? (
-              <Pause size={18} className="text-white" strokeWidth={2.5} />
-            ) : (
-              <Play size={18} className="text-white ml-0.5" strokeWidth={2.5} />
-            )}
+            <div 
+              className="w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 shrink-0"
+              style={{ 
+                backgroundColor: isPlaying ? accentColor : 'rgba(255, 255, 255, 0.05)',
+                boxShadow: isPlaying ? `0 0 24px ${accentColor}40` : 'none',
+                border: isPlaying ? 'none' : '1px solid rgba(255, 255, 255, 0.06)',
+              }}
+            >
+              {isLoading ? (
+                <Loader2 size={20} className="text-white animate-spin" />
+              ) : isPlaying ? (
+                <Pause size={20} className="text-white" />
+              ) : (
+                <Play size={20} className="text-white/40 group-hover:text-white/80 ml-0.5 transition-colors" />
+              )}
+            </div>
+            <div className="flex flex-col items-start">
+              <span className="text-sm text-white/60 group-hover:text-white/80 transition-colors">
+                {isLoading ? 'Loading...' : isPlaying ? 'Now Playing' : 'Listen'}
+              </span>
+              {currentSound && (
+                <span className="text-[11px] text-white/25">
+                  by {currentSound.username}
+                </span>
+              )}
+            </div>
           </button>
         </div>
       </div>

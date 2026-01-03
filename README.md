@@ -1,73 +1,83 @@
-# React + TypeScript + Vite
+# 🌍 EthnoSphere
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Interactive 3D World Music Atlas**
 
-Currently, two official plugins are available:
+EthnoSphere is an immersive web application that lets you explore traditional musical instruments from around the world through an interactive 3D globe. Discover the rich diversity of global music cultures with just a click.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+![EthnoSphere](https://img.shields.io/badge/React-18-61DAFB?logo=react) ![Three.js](https://img.shields.io/badge/Three.js-R3F-black?logo=three.js) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript) ![Tailwind](https://img.shields.io/badge/Tailwind-4-38B2AC?logo=tailwindcss)
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Interactive 3D Globe** – Navigate a beautifully rendered Earth with realistic textures, atmosphere, and cloud layers
+- **85+ Traditional Instruments** – Explore instruments from every continent, from the Japanese Koto to the Irish Bodhrán
+- **Live Audio Samples** – Listen to authentic instrument sounds powered by the Freesound API
+- **Cyberpunk Aesthetic** – Modern, sleek UI with neon accents and glass morphism design
+- **Smooth Animations** – Elegant beacon markers, loading transitions, and hover effects
 
-## Expanding the ESLint configuration
+## 🎵 Instrument Categories
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Region | Examples |
+|--------|----------|
+| **Europe** | Hurdy-Gurdy, Kantele, Bodhrán, Uilleann Pipes, Mandolin, Alphorn |
+| **Asia** | Koto, Shamisen, Sitar, Tabla, Erhu, Pipa, Gamelan, Guzheng |
+| **Africa** | Djembe, Kalimba, Kora, Balafon, Ngoni, Shekere, Masenqo |
+| **Americas** | Charango, Quena, Cajón, Bandoneón, Steelpan, Maracas |
+| **Oceania** | Didgeridoo, Ukulele, Pate, Nose Flute |
+| **Middle East** | Oud, Ney, Tar, Kamancheh, Bağlama |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 🚀 Getting Started
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### Prerequisites
+- Node.js 18+
+- npm or yarn
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### Installation
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+\`\`\`bash
+# Clone the repository
+git clone https://github.com/trekar99/Etnosphere.git
+cd Etnosphere
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+# Install dependencies
+npm install
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+# Start development server
+npm run dev
+\`\`\`
+
+Open [http://localhost:5173](http://localhost:5173) in your browser.
+
+## 🛠️ Tech Stack
+
+- **React 18** – UI framework
+- **React Three Fiber** – React renderer for Three.js
+- **@react-three/drei** – Useful helpers for R3F
+- **@react-three/postprocessing** – Post-processing effects (Bloom, Vignette)
+- **Zustand** – Lightweight state management
+- **TypeScript** – Type safety
+- **Tailwind CSS v4** – Utility-first styling
+- **Vite** – Fast build tool
+- **Freesound API** – Audio samples
+
+## 🎨 Design
+
+EthnoSphere features a cyberpunk-inspired design with:
+- Neon cyan (#00a8ff) accent color
+- Dark, immersive backgrounds
+- Glass morphism UI panels
+- Elegant pin-style markers on the globe
+- Smooth loading animations
+
+## 📝 License
+
+MIT License – feel free to use and modify.
+
+## 🙏 Credits
+
+- Globe textures from [Three.js examples](https://github.com/mrdoob/three.js)
+- Audio samples from [Freesound](https://freesound.org)
+- Icons from [Lucide](https://lucide.dev)
+
+---
+
+Made with 🎶 for music lovers worldwide
