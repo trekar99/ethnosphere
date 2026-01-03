@@ -2,7 +2,6 @@
 // Using Client Credentials flow for browser-based access
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const _FREESOUND_CLIENT_ID = 'YOUR_CLIENT_ID'; // For OAuth flow (not used in this implementation)
 const FREESOUND_API_KEY = '84cD2SUXg5jpHAqfecqLzPIsyCSs2PiYvLYEIOge'; // User should replace with their API key
 const FREESOUND_BASE_URL = 'https://freesound.org/apiv2';
 
