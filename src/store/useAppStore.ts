@@ -19,6 +19,10 @@ interface AppState {
   isPanelOpen: boolean;
   togglePanel: () => void;
   closePanel: () => void;
+  
+  // Loading state
+  isGlobeLoaded: boolean;
+  setGlobeLoaded: (loaded: boolean) => void;
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -39,4 +43,8 @@ export const useAppStore = create<AppState>((set) => ({
   isPanelOpen: false,
   togglePanel: () => set((state) => ({ isPanelOpen: !state.isPanelOpen })),
   closePanel: () => set({ isPanelOpen: false, selectedItem: null }),
+  
+  // Loading state
+  isGlobeLoaded: false,
+  setGlobeLoaded: (loaded) => set({ isGlobeLoaded: loaded }),
 }));

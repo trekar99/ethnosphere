@@ -1,8 +1,7 @@
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
 import { TextureLoader } from 'three';
 import * as THREE from 'three';
-import { Html } from '@react-three/drei';
 import { Atmosphere, InnerGlow } from './Atmosphere';
 import { BeaconMarker } from './BeaconMarker';
 import { getItemsByCategory } from '../../data/ethnoData';
@@ -23,9 +22,7 @@ const TEXTURE_URLS = {
 export function Globe() {
   const globeRef = useRef<THREE.Group>(null);
   const cloudsRef = useRef<THREE.Mesh>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [loadProgress, setLoadProgress] = useState(0);
-  const { currentMode, selectedItem, setSelectedItem } = useAppStore();
+  const { currentMode, selectedItem, setSelectedItem, setGlobeLoaded } = useAppStore();
 
   // Load all textures
   const [diffuseMap, normalMap, specularMap, nightMap, cloudsMap] = useLoader(TextureLoader, [
@@ -60,20 +57,11 @@ export function Globe() {
   // Loading progress simulation
   useEffect(() => {
     if (diffuseMap && normalMap && specularMap && nightMap && cloudsMap) {
-      // Textures loaded, animate progress to 100
-      const interval = setInterval(() => {
-        setLoadProgress(prev => {
-          if (prev >= 100) {
-            clearInterval(interval);
-            setTimeout(() => setIsLoaded(true), 300);
-            return 100;
-          }
-          return prev + 8;
-        });
-      }, 50);
-      return () => clearInterval(interval);
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => setGlobeLoaded(true), 500);
+      return () => clearTimeout(timer);
     }
-  }, [diffuseMap, normalMap, specularMap, nightMap, cloudsMap]);
+  }, [diffuseMap, normalMap, specularMap, nightMap, cloudsMap, setGlobeLoaded]);
 
   // Get items for current mode
   const items = useMemo(() => {
@@ -96,72 +84,6 @@ export function Globe() {
 
   return (
     <group ref={globeRef}>
-      {/* Loading overlay */}
-      {!isLoaded && (
-        <Html center>
-          <div className="fixed inset-0 w-screen h-screen flex flex-col items-center justify-center bg-black z-50">
-            {/* Animated glow */}
-            <div 
-              className="absolute w-[500px] h-[500px] rounded-full blur-[100px] opacity-25"
-              style={{
-                background: 'radial-gradient(circle, #00a8ff 0%, transparent 70%)',
-                animation: 'pulse 2.5s ease-in-out infinite',
-              }}
-            />
-            
-            {/* Globe SVG */}
-            <div className="relative w-28 h-28 mb-10">
-              <svg viewBox="0 0 100 100" className="w-full h-full">
-                <circle cx="50" cy="50" r="45" fill="none" stroke="#00a8ff" strokeWidth="0.5" opacity="0.2" />
-                <circle
-                  cx="50" cy="50" r="45" fill="none" stroke="#00a8ff" strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeDasharray={`${loadProgress * 2.83} 283`}
-                  transform="rotate(-90 50 50)"
-                  style={{ transition: 'stroke-dasharray 0.15s ease' }}
-                />
-                <ellipse cx="50" cy="50" rx="45" ry="18" fill="none" stroke="#00a8ff" strokeWidth="0.4" opacity="0.3" />
-                <ellipse cx="50" cy="50" rx="18" ry="45" fill="none" stroke="#00a8ff" strokeWidth="0.4" opacity="0.3" />
-                <circle cx="50" cy="50" r="4" fill="#00a8ff" opacity="0.6">
-                  <animate attributeName="r" values="3;5;3" dur="1.5s" repeatCount="indefinite" />
-                </circle>
-              </svg>
-            </div>
-            
-            {/* Title */}
-            <h1 className="text-3xl font-light tracking-[0.4em] mb-3">
-              <span className="text-[#00a8ff]">ETHNO</span>
-              <span className="text-white/90">SPHERE</span>
-            </h1>
-            
-            {/* Subtitle */}
-            <p className="text-white/30 text-xs tracking-[0.3em] uppercase mb-10">
-              Interactive World Music Atlas
-            </p>
-            
-            {/* Progress bar */}
-            <div className="w-56 h-[2px] bg-white/10 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-[#00a8ff] rounded-full transition-all duration-150 ease-out"
-                style={{ width: `${loadProgress}%` }}
-              />
-            </div>
-            
-            {/* Percentage */}
-            <p className="mt-4 text-white/40 text-sm font-mono tracking-wider">
-              {loadProgress}%
-            </p>
-            
-            <style>{`
-              @keyframes pulse {
-                0%, 100% { transform: scale(1); opacity: 0.2; }
-                50% { transform: scale(1.15); opacity: 0.35; }
-              }
-            `}</style>
-          </div>
-        </Html>
-      )}
-
       {/* Main Earth - high quality physically based material */}
       <mesh>
         <sphereGeometry args={[GLOBE_RADIUS, 256, 256]} />
