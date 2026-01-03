@@ -4,33 +4,31 @@ export function ModeToggle() {
   const accentColor = '#00a8ff';
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 items-center">
       {/* Active Instruments mode */}
       <button
-        className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 text-sm font-medium tracking-wide"
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium"
         style={{ 
-          backgroundColor: `${accentColor}20`,
+          backgroundColor: `${accentColor}15`,
           color: accentColor,
-          border: `1px solid ${accentColor}30`
+          border: `1px solid ${accentColor}25`
         }}
       >
-        <Music size={15} strokeWidth={1.5} />
+        <Music size={14} strokeWidth={1.5} />
         <span className="hidden sm:inline">Instruments</span>
       </button>
 
-      {/* Disabled Radio mode with Coming Soon */}
-      <div className="relative">
-        <button
-          disabled
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium tracking-wide text-muted/50 bg-white/5 cursor-not-allowed"
-        >
-          <Radio size={15} strokeWidth={1.5} />
-          <span className="hidden sm:inline">Ethno-Radio</span>
-        </button>
-        <span className="absolute -top-2 -right-2 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider bg-indigo-500/20 text-indigo-400 rounded border border-indigo-500/30">
-          Soon
+      {/* Disabled Radio mode */}
+      <button
+        disabled
+        className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white/25 cursor-not-allowed"
+      >
+        <Radio size={14} strokeWidth={1.5} />
+        <span className="hidden sm:inline">Radio</span>
+        <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-white/30 ml-1">
+          2026
         </span>
-      </div>
+      </button>
     </div>
   );
 }

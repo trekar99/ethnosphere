@@ -22,7 +22,6 @@ const TEXTURE_URLS = {
 export function Globe() {
   const globeRef = useRef<THREE.Group>(null);
   const cloudsRef = useRef<THREE.Mesh>(null);
-  const clouds2Ref = useRef<THREE.Mesh>(null);
   const { currentMode, selectedItem, setSelectedItem } = useAppStore();
 
   // Load all textures
@@ -63,13 +62,10 @@ export function Globe() {
   // Slow rotation animation
   useFrame((_, delta) => {
     if (globeRef.current) {
-      globeRef.current.rotation.y += delta * 0.015;
+      globeRef.current.rotation.y += delta * 0.012;
     }
     if (cloudsRef.current) {
-      cloudsRef.current.rotation.y += delta * 0.02;
-    }
-    if (clouds2Ref.current) {
-      clouds2Ref.current.rotation.y -= delta * 0.008;
+      cloudsRef.current.rotation.y += delta * 0.018;
     }
   });
 
@@ -79,55 +75,46 @@ export function Globe() {
 
   return (
     <group ref={globeRef}>
-      {/* Main Earth - using MeshStandardMaterial for stability */}
+      {/* Main Earth - high quality physically based material */}
       <mesh>
-        <sphereGeometry args={[GLOBE_RADIUS, 128, 128]} />
-        <meshStandardMaterial
+        <sphereGeometry args={[GLOBE_RADIUS, 256, 256]} />
+        <meshPhysicalMaterial
           map={diffuseMap}
           normalMap={normalMap}
-          normalScale={new THREE.Vector2(0.8, 0.8)}
+          normalScale={new THREE.Vector2(0.5, 0.5)}
           roughnessMap={specularMap}
-          roughness={0.8}
-          metalness={0.1}
+          roughness={0.85}
+          metalness={0.05}
+          clearcoat={0.1}
+          clearcoatRoughness={0.4}
         />
       </mesh>
 
-      {/* Night lights layer */}
+      {/* Night lights layer - subtle glow */}
       <mesh>
-        <sphereGeometry args={[GLOBE_RADIUS + 0.001, 128, 128]} />
+        <sphereGeometry args={[GLOBE_RADIUS + 0.002, 128, 128]} />
         <meshBasicMaterial
           map={nightMap}
           transparent
-          opacity={0.9}
+          opacity={0.7}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
 
-      {/* Cloud layer 1 */}
+      {/* Single cloud layer - cleaner look */}
       <mesh ref={cloudsRef}>
-        <sphereGeometry args={[GLOBE_RADIUS + 0.02, 64, 64]} />
+        <sphereGeometry args={[GLOBE_RADIUS + 0.015, 96, 96]} />
         <meshStandardMaterial
           map={cloudsMap}
           transparent
-          opacity={0.5}
+          opacity={0.35}
           depthWrite={false}
-          alphaTest={0.1}
+          alphaTest={0.05}
         />
       </mesh>
 
-      {/* Cloud layer 2 for depth */}
-      <mesh ref={clouds2Ref} rotation={[0.1, 2, 0]}>
-        <sphereGeometry args={[GLOBE_RADIUS + 0.035, 64, 64]} />
-        <meshStandardMaterial
-          map={cloudsMap}
-          transparent
-          opacity={0.25}
-          depthWrite={false}
-        />
-      </mesh>
-
-      {/* Markers - outside the mesh to avoid z-fighting */}
+      {/* Markers */}
       {items.map((item) => (
         <BeaconMarker
           key={item.id}
@@ -140,8 +127,8 @@ export function Globe() {
       ))}
 
       {/* Atmospheric glow */}
-      <Atmosphere radius={GLOBE_RADIUS + 0.08} />
-      <InnerGlow radius={GLOBE_RADIUS + 0.01} />
+      <Atmosphere radius={GLOBE_RADIUS + 0.06} />
+      <InnerGlow radius={GLOBE_RADIUS + 0.008} />
     </group>
   );
 }

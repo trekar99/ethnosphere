@@ -24,14 +24,9 @@ function latLngToVector3(lat: number, lng: number, radius: number): THREE.Vector
   return new THREE.Vector3(x, y, z);
 }
 
-// Elegant beam height
-const BEAM_HEIGHT = 0.25;
-const BEAM_HEIGHT_SELECTED = 0.4;
-
 export function BeaconMarker({ item, globeRadius, isSelected, currentMode, onClick }: BeaconMarkerProps) {
-  const beamRef = useRef<THREE.Mesh>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
-  const dotRef = useRef<THREE.Mesh>(null);
+  const lineRef = useRef<THREE.Mesh>(null);
+  const tipRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
 
   // Base position on globe surface
@@ -39,49 +34,42 @@ export function BeaconMarker({ item, globeRadius, isSelected, currentMode, onCli
     return latLngToVector3(item.coordinates.lat, item.coordinates.lng, globeRadius);
   }, [item.coordinates.lat, item.coordinates.lng, globeRadius]);
 
-  // Normal (up direction) from the surface
+  // Normal direction from surface
   const normal = useMemo(() => basePosition.clone().normalize(), [basePosition]);
 
-  // Rotation to align beam with surface normal
+  // Rotation to align with surface normal
   const rotation = useMemo(() => {
     const up = new THREE.Vector3(0, 1, 0);
     const quaternion = new THREE.Quaternion().setFromUnitVectors(up, normal);
     return new THREE.Euler().setFromQuaternion(quaternion);
   }, [normal]);
 
-  // Position slightly above surface
+  // Position at surface
   const surfacePosition = useMemo(() => {
-    return basePosition.clone().add(normal.clone().multiplyScalar(0.005));
+    return basePosition.clone().add(normal.clone().multiplyScalar(0.003));
   }, [basePosition, normal]);
 
-  // Colors - clean neon blue
+  // Color
   const color = currentMode === 'instruments' ? '#00a8ff' : '#818cf8';
   const colorObj = useMemo(() => new THREE.Color(color), [color]);
 
-  // Smooth animation
+  // Line height based on state
+  const lineHeight = isSelected ? 0.18 : hovered ? 0.14 : 0.12;
+  const tipSize = isSelected ? 0.018 : hovered ? 0.015 : 0.012;
+
+  // Subtle animation
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     
-    // Subtle beam breathing
-    if (beamRef.current) {
-      const breathe = 1 + Math.sin(t * 2) * 0.03;
-      beamRef.current.scale.y = breathe;
-      (beamRef.current.material as THREE.ShaderMaterial).uniforms.opacity.value = 
-        isSelected ? 0.9 : hovered ? 0.7 : 0.5;
+    if (lineRef.current) {
+      const mat = lineRef.current.material as THREE.ShaderMaterial;
+      mat.uniforms.opacity.value = isSelected ? 0.85 : hovered ? 0.65 : 0.45;
     }
 
-    // Soft glow pulse
-    if (glowRef.current) {
-      const pulse = isSelected ? 0.4 : hovered ? 0.3 : 0.2;
-      (glowRef.current.material as THREE.MeshBasicMaterial).opacity = 
-        pulse + Math.sin(t * 1.5) * 0.05;
-    }
-
-    // Top dot gentle float
-    if (dotRef.current) {
-      const float = Math.sin(t * 1.5) * 0.008;
-      const beamHeight = isSelected ? BEAM_HEIGHT_SELECTED : hovered ? BEAM_HEIGHT * 1.15 : BEAM_HEIGHT;
-      dotRef.current.position.y = beamHeight + float;
+    if (tipRef.current) {
+      // Gentle pulse
+      const pulse = 1 + Math.sin(t * 2) * 0.08;
+      tipRef.current.scale.setScalar(isSelected ? pulse : 1);
     }
   });
 
@@ -90,12 +78,23 @@ export function BeaconMarker({ item, globeRadius, isSelected, currentMode, onCli
     onClick(item);
   };
 
-  // Elegant gradient beam shader
-  const beamMaterial = useMemo(() => {
+  const handlePointerEnter = (e: ThreeEvent<PointerEvent>) => {
+    e.stopPropagation();
+    setHovered(true);
+    document.body.style.cursor = 'pointer';
+  };
+
+  const handlePointerLeave = () => {
+    setHovered(false);
+    document.body.style.cursor = 'auto';
+  };
+
+  // Ultra-clean gradient line shader
+  const lineMaterial = useMemo(() => {
     return new THREE.ShaderMaterial({
       uniforms: {
         color: { value: colorObj },
-        opacity: { value: 0.5 },
+        opacity: { value: 0.45 },
       },
       vertexShader: `
         varying vec2 vUv;
@@ -110,14 +109,11 @@ export function BeaconMarker({ item, globeRadius, isSelected, currentMode, onCli
         varying vec2 vUv;
         
         void main() {
-          // Smooth gradient fade from bottom to top
-          float gradient = pow(1.0 - vUv.y, 1.5);
-          
-          // Soft edge fade
-          float edge = smoothstep(0.0, 0.3, vUv.x) * smoothstep(1.0, 0.7, vUv.x);
-          
-          float alpha = gradient * edge * opacity;
-          
+          // Clean vertical gradient - stronger at bottom
+          float gradient = pow(1.0 - vUv.y, 2.0);
+          // Thin center line
+          float center = 1.0 - pow(abs(vUv.x - 0.5) * 2.0, 0.5);
+          float alpha = gradient * center * opacity;
           gl_FragColor = vec4(color, alpha);
         }
       `,
@@ -128,92 +124,53 @@ export function BeaconMarker({ item, globeRadius, isSelected, currentMode, onCli
     });
   }, [colorObj]);
 
-  const beamHeight = isSelected ? BEAM_HEIGHT_SELECTED : hovered ? BEAM_HEIGHT * 1.15 : BEAM_HEIGHT;
-  const beamWidth = isSelected ? 0.012 : hovered ? 0.01 : 0.008;
-  const dotSize = isSelected ? 0.022 : hovered ? 0.018 : 0.015;
-
   return (
     <group position={surfacePosition} rotation={rotation}>
-      {/* Minimal base dot */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.012, 16]} />
-        <meshBasicMaterial 
-          color={colorObj} 
-          transparent 
-          opacity={isSelected ? 0.8 : 0.5} 
-        />
+      {/* Thin vertical line - plane 1 */}
+      <mesh ref={lineRef} position={[0, lineHeight / 2, 0]}>
+        <planeGeometry args={[0.006, lineHeight]} />
+        <primitive object={lineMaterial} attach="material" />
       </mesh>
 
-      {/* Clean vertical beam - front */}
-      <mesh ref={beamRef} position={[0, beamHeight / 2, 0]}>
-        <planeGeometry args={[beamWidth, beamHeight]} />
-        <primitive object={beamMaterial} attach="material" />
+      {/* Thin vertical line - plane 2 (perpendicular) */}
+      <mesh position={[0, lineHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[0.006, lineHeight]} />
+        <primitive object={lineMaterial.clone()} attach="material" />
       </mesh>
 
-      {/* Clean vertical beam - side (perpendicular) */}
-      <mesh position={[0, beamHeight / 2, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[beamWidth, beamHeight]} />
-        <primitive object={beamMaterial.clone()} attach="material" />
-      </mesh>
-
-      {/* Subtle outer glow */}
-      <mesh ref={glowRef} position={[0, beamHeight / 2, 0]}>
-        <cylinderGeometry args={[beamWidth * 3, beamWidth * 4, beamHeight * 0.8, 8, 1, true]} />
-        <meshBasicMaterial 
-          color={colorObj} 
-          transparent 
-          opacity={0.15} 
-          side={THREE.DoubleSide}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
-
-      {/* Top indicator dot */}
-      <mesh 
-        ref={dotRef} 
-        position={[0, beamHeight, 0]}
+      {/* Top tip point */}
+      <mesh
+        ref={tipRef}
+        position={[0, lineHeight, 0]}
         onClick={handleClick}
-        onPointerEnter={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerLeave={() => {
-          setHovered(false);
-          document.body.style.cursor = 'auto';
-        }}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
       >
-        <sphereGeometry args={[dotSize, 12, 12]} />
-        <meshBasicMaterial color={isSelected ? '#ffffff' : colorObj} />
+        <sphereGeometry args={[tipSize, 16, 16]} />
+        <meshBasicMaterial 
+          color={isSelected ? '#ffffff' : colorObj} 
+        />
       </mesh>
 
-      {/* Dot glow halo */}
-      <mesh position={[0, beamHeight, 0]}>
-        <sphereGeometry args={[dotSize * 2, 12, 12]} />
-        <meshBasicMaterial 
-          color={colorObj} 
-          transparent 
-          opacity={isSelected ? 0.4 : hovered ? 0.3 : 0.2} 
+      {/* Tip glow */}
+      <mesh position={[0, lineHeight, 0]}>
+        <sphereGeometry args={[tipSize * 1.8, 12, 12]} />
+        <meshBasicMaterial
+          color={colorObj}
+          transparent
+          opacity={isSelected ? 0.5 : hovered ? 0.35 : 0.2}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
       </mesh>
 
-      {/* Invisible clickable area */}
+      {/* Invisible hit area */}
       <mesh
         onClick={handleClick}
-        onPointerEnter={(e) => {
-          e.stopPropagation();
-          setHovered(true);
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerLeave={() => {
-          setHovered(false);
-          document.body.style.cursor = 'auto';
-        }}
+        onPointerEnter={handlePointerEnter}
+        onPointerLeave={handlePointerLeave}
       >
-        <cylinderGeometry args={[0.04, 0.04, beamHeight + 0.05, 6]} />
+        <cylinderGeometry args={[0.03, 0.03, lineHeight + 0.04, 6]} />
         <meshBasicMaterial transparent opacity={0} depthWrite={false} />
       </mesh>
     </group>
