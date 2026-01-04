@@ -2,8 +2,8 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Stars, Preload } from '@react-three/drei';
 import { Suspense } from 'react';
 import { Globe } from './Globe';
-import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
-import { BlendFunction } from 'postprocessing';
+import { EffectComposer, Bloom, Vignette, ToneMapping } from '@react-three/postprocessing';
+import { BlendFunction, ToneMappingMode } from 'postprocessing';
 import * as THREE from 'three';
 
 function LoadingFallback() {
@@ -15,29 +15,29 @@ function LoadingFallback() {
   );
 }
 
-// Subtle star field
-function SpaceDust() {
+// Hyperrealistic deep space environment
+function SpaceEnvironment() {
   return (
     <>
-      {/* Sparse star field - cleaner look */}
+      {/* Dense distant stars */}
       <Stars
-        radius={100}
-        depth={60}
-        count={1200}
-        factor={3}
-        saturation={0}
-        fade
-        speed={0.1}
-      />
-      {/* Far background stars */}
-      <Stars
-        radius={200}
+        radius={300}
         depth={100}
-        count={800}
-        factor={5}
+        count={2000}
+        factor={4}
+        saturation={0.1}
+        fade
+        speed={0.02}
+      />
+      {/* Sparse bright stars */}
+      <Stars
+        radius={150}
+        depth={60}
+        count={200}
+        factor={8}
         saturation={0}
         fade
-        speed={0.05}
+        speed={0.01}
       />
     </>
   );
@@ -46,41 +46,48 @@ function SpaceDust() {
 export function Scene() {
   return (
     <Canvas
-      camera={{ position: [0, 0, 5.5], fov: 42, near: 0.1, far: 1000 }}
+      camera={{ position: [0, 0, 4.5], fov: 45, near: 0.1, far: 1000 }}
       gl={{ 
         antialias: true, 
         alpha: false,
         powerPreference: 'high-performance',
-        toneMapping: THREE.ACESFilmicToneMapping,
-        toneMappingExposure: 1.1,
         outputColorSpace: THREE.SRGBColorSpace,
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 1.2,
       }}
       dpr={[1, 2]}
       style={{ background: '#000000' }}
     >
-      {/* Pure black space background */}
-      <color attach="background" args={['#000000']} />
-      <fog attach="fog" args={['#000000', 60, 300]} />
+      {/* Deep space black */}
+      <color attach="background" args={['#000004']} />
+      <fog attach="fog" args={['#000004', 100, 500]} />
 
-      {/* Realistic lighting */}
-      <ambientLight intensity={0.08} color="#334466" />
+      {/* Realistic space lighting */}
+      <ambientLight intensity={0.03} color="#0a1525" />
       
-      {/* Main sun light - positioned for good Earth illumination */}
+      {/* Main sunlight - warm and intense */}
       <directionalLight
-        position={[8, 3, 6]}
-        intensity={2.2}
-        color="#fff8f0"
+        position={[12, 5, 8]}
+        intensity={3.5}
+        color="#fff5e6"
       />
       
-      {/* Subtle fill light */}
+      {/* Subtle earthshine - blue fill */}
       <directionalLight
-        position={[-6, -2, -4]}
+        position={[-6, -4, -4]}
+        intensity={0.12}
+        color="#2244aa"
+      />
+      
+      {/* Rim light for depth */}
+      <directionalLight
+        position={[-8, 2, -6]}
         intensity={0.08}
-        color="#4488cc"
+        color="#334466"
       />
 
       {/* Space environment */}
-      <SpaceDust />
+      <SpaceEnvironment />
 
       {/* Globe */}
       <Suspense fallback={<LoadingFallback />}>
@@ -88,36 +95,35 @@ export function Scene() {
         <Preload all />
       </Suspense>
 
-      {/* Subtle post-processing */}
-      <EffectComposer>
-        {/* Gentle bloom for the markers */}
+      {/* Cinematic post-processing */}
+      <EffectComposer multisampling={0}>
+        <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
         <Bloom
           intensity={0.4}
-          luminanceThreshold={0.6}
+          luminanceThreshold={0.5}
           luminanceSmoothing={0.9}
           mipmapBlur
         />
-        {/* Subtle vignette */}
         <Vignette
-          offset={0.35}
-          darkness={0.5}
+          offset={0.3}
+          darkness={0.4}
           blendFunction={BlendFunction.NORMAL}
         />
       </EffectComposer>
 
-      {/* Camera controls */}
+      {/* Camera controls - smooth and cinematic */}
       <OrbitControls
         enablePan={false}
         enableZoom={true}
-        minDistance={3}
-        maxDistance={8}
+        minDistance={2.8}
+        maxDistance={10}
         autoRotate={false}
-        rotateSpeed={0.35}
-        zoomSpeed={0.5}
+        rotateSpeed={0.4}
+        zoomSpeed={0.6}
         enableDamping={true}
-        dampingFactor={0.03}
-        minPolarAngle={Math.PI * 0.2}
-        maxPolarAngle={Math.PI * 0.8}
+        dampingFactor={0.04}
+        minPolarAngle={Math.PI * 0.15}
+        maxPolarAngle={Math.PI * 0.85}
       />
     </Canvas>
   );

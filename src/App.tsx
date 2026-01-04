@@ -56,7 +56,7 @@ function App() {
       {/* Loading Overlay */}
       {!isGlobeLoaded && <LoadingOverlay />}
 
-      {/* 3D Canvas */}
+      {/* 3D Globe Scene */}
       <Suspense fallback={null}>
         <Scene />
       </Suspense>

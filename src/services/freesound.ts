@@ -1,8 +1,7 @@
 // Freesound API Service
 // Using Client Credentials flow for browser-based access
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const FREESOUND_API_KEY = '84cD2SUXg5jpHAqfecqLzPIsyCSs2PiYvLYEIOge'; // User should replace with their API key
+const FREESOUND_API_KEY = '84cD2SUXg5jpHAqfecqLzPIsyCSs2PiYvLYEIOge';
 const FREESOUND_BASE_URL = 'https://freesound.org/apiv2';
 
 export interface FreesoundResult {
@@ -33,16 +32,24 @@ export async function searchSounds(query: string, limit: number = 10): Promise<F
       sort: 'rating_desc',
     });
 
-    const response = await fetch(
-      `${FREESOUND_BASE_URL}/search/text/?${params}&token=${FREESOUND_API_KEY}`
-    );
+    const url = `${FREESOUND_BASE_URL}/search/text/?${params}&token=${FREESOUND_API_KEY}`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
 
     if (!response.ok) {
-      throw new Error(`Freesound API error: ${response.status}`);
+      console.error(`Freesound API error: ${response.status} ${response.statusText}`);
+      return [];
     }
 
     const data: FreesoundSearchResponse = await response.json();
-    return data.results;
+    
+    // Filter results to ensure they have valid previews
+    return data.results.filter(r => r.previews && r.previews['preview-hq-mp3']);
   } catch (error) {
     console.error('Error searching Freesound:', error);
     return [];
@@ -71,8 +78,18 @@ export function playSound(previewUrl: string): HTMLAudioElement {
     currentAudio.currentTime = 0;
   }
 
-  currentAudio = new Audio(previewUrl);
-  currentAudio.play();
+  currentAudio = new Audio();
+  currentAudio.crossOrigin = 'anonymous';
+  currentAudio.src = previewUrl;
+  
+  // Handle autoplay restrictions
+  const playPromise = currentAudio.play();
+  if (playPromise !== undefined) {
+    playPromise.catch((error) => {
+      console.error('Audio playback failed:', error);
+    });
+  }
+  
   return currentAudio;
 }
 
