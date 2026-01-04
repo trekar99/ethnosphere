@@ -116,6 +116,14 @@ MIT License — feel free to use and modify.
 
 <br>
 
+## Future Work
+
+- Check Museu de la Música Instrument Catàleg
+- Improve Freesound queries
+- Include more instruments 
+
+<br>
+
 ---
 
 Made with 🎶 for music lovers worldwide
