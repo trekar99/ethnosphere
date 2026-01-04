@@ -25,31 +25,51 @@ export interface FreesoundSearchResponse {
 // Search for sounds by query
 export async function searchSounds(query: string, limit: number = 10): Promise<FreesoundResult[]> {
   try {
-    const params = new URLSearchParams({
-      query,
-      fields: 'id,name,previews,duration,username',
-      page_size: limit.toString(),
-      sort: 'rating_desc',
-    });
-
-    const url = `${FREESOUND_BASE_URL}/search/text/?${params}&token=${FREESOUND_API_KEY}`;
+    // Freesound uses AND logic by default, which fails for "marimba guatemala"
+    // Strategy: Try original query first, then fall back to just the first word (instrument name)
+    const words = query.trim().split(/\s+/);
+    const queries = [query];
     
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      console.error(`Freesound API error: ${response.status} ${response.statusText}`);
-      return [];
+    // If query has multiple words, add fallback with just the first word (likely the instrument name)
+    if (words.length > 1) {
+      queries.push(words[0]);
     }
-
-    const data: FreesoundSearchResponse = await response.json();
     
-    // Filter results to ensure they have valid previews
-    return data.results.filter(r => r.previews && r.previews['preview-hq-mp3']);
+    for (const q of queries) {
+      const params = new URLSearchParams({
+        query: q,
+        fields: 'id,name,previews,duration,username',
+        page_size: limit.toString(),
+        sort: 'rating_desc',
+        filter: 'duration:[5 TO *]', // Minimum 5 seconds, no upper limit
+      });
+
+      const url = `${FREESOUND_BASE_URL}/search/text/?${params}&token=${FREESOUND_API_KEY}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        console.error(`Freesound API error: ${response.status} ${response.statusText}`);
+        continue;
+      }
+
+      const data: FreesoundSearchResponse = await response.json();
+      
+      // Filter results to ensure they have valid previews
+      const validResults = data.results.filter(r => r.previews && r.previews['preview-hq-mp3']);
+      
+      if (validResults.length > 0) {
+        return validResults;
+      }
+      // No results, try next query (fallback)
+    }
+    
+    return [];
   } catch (error) {
     console.error('Error searching Freesound:', error);
     return [];
