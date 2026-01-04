@@ -46,7 +46,7 @@ function SpaceEnvironment() {
 export function Scene() {
   return (
     <Canvas
-      camera={{ position: [0, 0, 4.5], fov: 45, near: 0.1, far: 1000 }}
+      camera={{ position: [0, 0, 5.5], fov: 45, near: 0.1, far: 1000 }}
       gl={{ 
         antialias: true, 
         alpha: false,
