@@ -67,51 +67,55 @@ export function DetailsPanel() {
 
   return (
     <div className="fixed left-6 bottom-6 z-10">
-      <div className="w-[340px] bg-[#0a0a0f] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
-        
-        {/* Header with name */}
-        <div className="px-6 pt-6 pb-4">
-          <h2 className="text-[22px] font-semibold text-white">
+      <div 
+        className="w-80 rounded-xl"
+        style={{ 
+          background: 'rgba(8, 8, 12, 0.94)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
+          border: '1px solid rgba(255, 255, 255, 0.06)'
+        }}
+      >
+        {/* Content */}
+        <div className="p-6">
+          <h2 className="text-lg font-medium text-white">
             {selectedItem.name}
           </h2>
-          <p className="text-[15px] text-white/50 mt-1">
+          
+          <p className="text-sm text-white/50 mt-1.5">
             {selectedItem.country}
           </p>
-        </div>
-        
-        {/* Description */}
-        {selectedItem.description && (
-          <div className="px-6 pb-5">
-            <p className="text-[13px] text-white/40 leading-[1.6]">
+          
+          {selectedItem.description && (
+            <p className="text-[13px] text-white/40 mt-4 leading-relaxed">
               {selectedItem.description}
             </p>
-          </div>
-        )}
+          )}
+        </div>
         
-        {/* Player bar */}
+        {/* Player */}
         <div 
-          className="flex items-center gap-4 px-5 py-4 cursor-pointer hover:bg-white/[0.03] transition-colors"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
+          className="flex items-center gap-4 px-6 py-4 cursor-pointer transition-colors hover:bg-white/5 rounded-b-xl"
+          style={{ borderTop: '1px solid rgba(255, 255, 255, 0.06)' }}
           onClick={handlePlayPause}
         >
           <div 
-            className="w-11 h-11 rounded-full flex items-center justify-center shrink-0"
+            className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
             style={{ backgroundColor: accentColor }}
           >
             {isLoading ? (
-              <Loader2 size={18} className="text-black animate-spin" />
+              <Loader2 size={16} className="text-black animate-spin" />
             ) : isPlaying ? (
-              <Pause size={18} className="text-black" />
+              <Pause size={16} className="text-black" />
             ) : (
-              <Play size={18} className="text-black ml-0.5" />
+              <Play size={16} className="text-black ml-0.5" />
             )}
           </div>
           
-          <div className="flex-1 min-w-0">
-            <p className="text-[14px] text-white/90 font-medium">
+          <div>
+            <p className="text-sm text-white/80 font-medium">
               {isLoading ? 'Loading...' : isPlaying ? 'Now Playing' : 'Play Sample'}
             </p>
-            <p className="text-[12px] text-white/40 truncate">
+            <p className="text-xs text-white/35">
               {currentSound ? `by ${currentSound.username}` : 'via Freesound'}
             </p>
           </div>
