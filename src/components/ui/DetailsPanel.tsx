@@ -11,10 +11,18 @@ export function DetailsPanel() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
+    // Stop sound when instrument changes
+    stopSound();
     setIsPlaying(false);
     setCurrentSound(null);
-    stopSound();
   }, [selectedItem]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopSound();
+    };
+  }, []);
 
   const handlePlayPause = async () => {
     if (isPlaying) {
