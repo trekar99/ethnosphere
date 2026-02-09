@@ -1,8 +1,12 @@
 // Freesound API Service
 // Using Client Credentials flow for browser-based access
 
-const FREESOUND_API_KEY = '84cD2SUXg5jpHAqfecqLzPIsyCSs2PiYvLYEIOge';
+const FREESOUND_API_KEY = import.meta.env.VITE_FREESOUND_API_KEY; // <--- CAMBIO AQUÍ
 const FREESOUND_BASE_URL = 'https://freesound.org/apiv2';
+
+if (!FREESOUND_API_KEY) {
+  throw new Error("❌ Error: No se encontró FREESOUND_API_KEY en las variables de entorno.");
+}
 
 export interface FreesoundResult {
   id: number;
