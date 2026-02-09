@@ -6,6 +6,5 @@ import cesium from 'vite-plugin-cesium'
 export default defineConfig({
   plugins: [react(), cesium()],
 
-  // 👇 AÑADE ESTA LÍNEA CON EL NOMBRE DE TU REPO 👇
-  base: "/EthnoSphere/",
+  base: "/ethnosphere/",
 })
