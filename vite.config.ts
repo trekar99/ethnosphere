@@ -6,5 +6,5 @@ const isGitHubPages = process.env.GITHUB_ACTIONS === 'true';
 
 export default defineConfig({
   plugins: [react(), cesium()],
-  base: isGitHubPages ? "/EthnoSphere/" : "/", 
+  base: isGitHubPages ? "/ethnosphere/" : "/", 
 })
